@@ -9,7 +9,6 @@
     "screenshot": "images/disco.png",
     "title": "Disco"
   },
-    
   {
     "category": "ubuntu-vm",
     "combo": "!combo ctrl alt t !combo ctrl c !wait 2 !key f11 !send echo \"amixer set Master 100%; while :; do printf \\\"\\u001b[4%dm DISCO \\\" $((RANDOM%8)) wait 1; done\" >> ~/.bashrc; source ~/.bashrc",
@@ -20,5 +19,4 @@
     "screenshot": "images/discored.png",
     "title": "Disco red"
   }
-    
 ]
