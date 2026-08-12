@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chat Uses VMs — Scripts</title>
+<title>Chat Uses VMs — Script Gallery</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -68,6 +68,16 @@
     background: #f2f2f2;
     display: block;
   }
+  .card-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f2f2f2;
+    color: #999;
+    font-size: 12px;
+  }
   .card-body {
     padding: 12px 14px;
     display: flex;
@@ -108,6 +118,47 @@
     text-align: center;
     color: #888;
   }
+  .error-banner {
+    margin: 16px 24px 0 24px;
+    padding: 12px 14px;
+    background: #fdecea;
+    border: 1px solid #f5b5ac;
+    border-radius: 6px;
+    color: #8a1f11;
+    font-size: 13px;
+    line-height: 1.5;
+    display: none;
+  }
+  .error-banner.show {
+    display: block;
+  }
+  .error-banner strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .error-banner pre {
+    margin: 6px 0 0 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 12px;
+    background: #fff;
+    border: 1px solid #f5b5ac;
+    border-radius: 4px;
+    padding: 6px 8px;
+  }
+  .warn-banner {
+    margin: 16px 24px 0 24px;
+    padding: 10px 14px;
+    background: #fff8e1;
+    border: 1px solid #f0d78c;
+    border-radius: 6px;
+    color: #6b5300;
+    font-size: 13px;
+    display: none;
+  }
+  .warn-banner.show {
+    display: block;
+  }
 </style>
 </head>
 <body>
@@ -124,17 +175,104 @@
   </select>
 </div>
 
+<div class="error-banner" id="error-banner"></div>
+<div class="warn-banner" id="warn-banner"></div>
 <div id="grid"></div>
 <div class="empty" id="empty" style="display:none;">No scripts match your search.</div>
 
 <script>
 let allScripts = [];
 
+const REQUIRED_FIELDS = ['id', 'title', 'category', 'creator', 'description', 'combo', 'date_added'];
+
+function showError(title, detail) {
+  const banner = document.getElementById('error-banner');
+  banner.innerHTML = `<strong>${escapeHtml(title)}</strong>${detail ? `<pre>${escapeHtml(detail)}</pre>` : ''}`;
+  banner.classList.add('show');
+}
+
+function showWarning(message) {
+  const banner = document.getElementById('warn-banner');
+  banner.textContent = message;
+  banner.classList.add('show');
+}
+
 async function loadScripts() {
-  const res = await fetch('scripts.json');
-  allScripts = await res.json();
+  let res;
+  try {
+    res = await fetch('scripts.json', { cache: 'no-store' });
+  } catch (err) {
+    // Network-level failure: wrong path, offline, CORS, etc.
+    showError(
+      'Could not load scripts.json',
+      `Fetch failed: ${err.message}\n\nCheck that scripts.json exists in the repo root and the filename casing matches exactly (GitHub Pages is case-sensitive).`
+    );
+    return;
+  }
+
+  if (!res.ok) {
+    // File fetched but server returned an error status (commonly 404 = wrong filename/path).
+    showError(
+      `Could not load scripts.json (HTTP ${res.status})`,
+      res.status === 404
+        ? 'scripts.json was not found at this path. Check the filename casing (e.g. "Scripts.json" vs "scripts.json") and that it sits next to index.html.'
+        : `Server responded with status ${res.status} ${res.statusText}.`
+    );
+    return;
+  }
+
+  const rawText = await res.text();
+  let parsed;
+  try {
+    parsed = JSON.parse(rawText);
+  } catch (err) {
+    // Invalid JSON syntax — show exactly where, since "empty page, no error" is the
+    // single most common failure mode for this file (unescaped quotes in combos, etc).
+    showError('scripts.json has invalid JSON syntax', formatJsonError(rawText, err));
+    return;
+  }
+
+  if (!Array.isArray(parsed)) {
+    showError('scripts.json must be a JSON array', 'The file parsed correctly, but the top-level value is not an array ("[...]"). Wrap your entries in [ ].');
+    return;
+  }
+
+  // Validate each entry individually so one bad object doesn't have to take down
+  // the whole gallery once the file is at least syntactically valid JSON.
+  const valid = [];
+  const problems = [];
+  parsed.forEach((entry, i) => {
+    const missing = REQUIRED_FIELDS.filter(f => entry[f] === undefined || entry[f] === '');
+    if (missing.length > 0) {
+      problems.push(`Entry ${i + 1} (${entry.title || entry.id || 'untitled'}): missing ${missing.join(', ')}`);
+      return;
+    }
+    valid.push(entry);
+  });
+
+  if (problems.length > 0) {
+    showWarning(`${problems.length} entr${problems.length === 1 ? 'y was' : 'ies were'} skipped for missing fields: ${problems.join(' | ')}`);
+  }
+
+  allScripts = valid;
   populateCategories();
   render();
+}
+
+function formatJsonError(rawText, err) {
+  // Chrome/Safari/Firefox all include a character position in JSON.parse's message
+  // in slightly different formats. Try to pull one out and show surrounding context.
+  const match = err.message.match(/position (\d+)/);
+  let context = '';
+  if (match) {
+    const pos = parseInt(match[1], 10);
+    const start = Math.max(0, pos - 40);
+    const end = Math.min(rawText.length, pos + 40);
+    const before = rawText.slice(start, pos);
+    const after = rawText.slice(pos, end);
+    context = `\n\n...${before}[HERE >>>]${after}...`;
+  }
+  return `${err.message}${context}\n\nCommon cause: an unescaped " inside a "combo" value. Every literal " inside a string must be written as \\" in JSON. Validate the file at jsonlint.com before committing.`;
 }
 
 function populateCategories() {
@@ -165,7 +303,11 @@ function render() {
     );
   }
 
-  items.sort((a, b) => new Date(b.date_added) - new Date(a.date_added));
+  items.sort((a, b) => {
+    const da = new Date(a.date_added).getTime();
+    const db = new Date(b.date_added).getTime();
+    return (isNaN(db) ? 0 : db) - (isNaN(da) ? 0 : da);
+  });
 
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
@@ -180,8 +322,13 @@ function render() {
   for (const s of items) {
     const card = document.createElement('div');
     card.className = 'card';
+    const hasScreenshot = !!s.screenshot;
+    const thumb = hasScreenshot
+      ? `<img src="${escapeHtml(s.screenshot)}" alt="${escapeHtml(s.title)}" loading="lazy" onerror="this.outerHTML='<div class=&quot;card-thumb&quot;>No screenshot</div>'">`
+      : `<div class="card-thumb">No screenshot</div>`;
+
     card.innerHTML = `
-      <img src="${s.screenshot}" alt="${escapeHtml(s.title)}" loading="lazy" onerror="this.style.display='none'">
+      ${thumb}
       <div class="card-body">
         <p class="card-title">${escapeHtml(s.title)}</p>
         <div class="card-meta">
