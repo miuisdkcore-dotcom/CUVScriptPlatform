@@ -1,12 +1,12 @@
 [
-  {
-    "id": "1",
-    "title": "Disco",
-    "category": "ubuntu-vm",
-    "creator": "techepic 3.0",
-    "description": "DISCOOOO",
-    "combo": "!combo ctrl alt t !combo ctrl c !wait 2 !key f11 !send echo \"amixer set Master 100%; while :; do printf \\\"\\u001b[4%dm DISCO \\\" $((RANDOM%8)); done\" >> ~/.bashrc; source ~/.bashrc",
-    "screenshot": "images/disco.png",
-    "date_added": "2026-08-13"
-  }
-]
+    {
+        "id": "1",
+            "title": "Disco",
+                "category": "ubuntu-vm",
+                    "creator": "techepic 3.0",
+                        "description": "DISCOOOO",
+                            "combo": "!combo ctrl alt t !combo ctrl c !wait 2 !key f11 !send echo \"amixer set Master 100%; while :; do printf \\\"\\u001b[4%dm DISCO \\\" $((RANDOM%8)); done\" >> ~/.bashrc; source ~/.bashrc",
+                                "screenshot": "images/disco.png",
+                                    "date_added": "2026-08-13"
+                                      }
+                                      ]
