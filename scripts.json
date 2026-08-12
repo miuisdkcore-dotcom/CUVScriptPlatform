@@ -1,12 +1,24 @@
 [
-    {
-        "id": "1",
-            "title": "Disco",
-                "category": "ubuntu-vm",
-                    "creator": "techepic 3.0",
-                        "description": "DISCOOOO",
-                            "combo": "!combo ctrl alt t !combo ctrl c !wait 2 !key f11 !send echo \"amixer set Master 100%; while :; do printf \\\"\\u001b[4%dm DISCO \\\" $((RANDOM%8)); done\" >> ~/.bashrc; source ~/.bashrc",
-                                "screenshot": "images/disco.png",
-                                    "date_added": "2026-08-13"
-                                      }
-                                      ]
+  {
+    "category": "ubuntu-vm",
+    "combo": "!combo ctrl alt t !combo ctrl c !wait 2 !key f11 !send echo \"amixer set Master 100%; while :; do printf \\\"\\u001b[4%dm DISCO \\\" $((RANDOM%8)); done\" >> ~/.bashrc; source ~/.bashrc",
+    "creator": "techepic 3.0",
+    "date_added": "2026-08-13",
+    "description": "DISCOOOO",
+    "id": "1",
+    "screenshot": "images/disco.png",
+    "title": "Disco"
+  }
+    
+  {
+    "category": "ubuntu-vm",
+    "combo": "!combo ctrl alt t !combo ctrl c !wait 2 !key f11 !send echo \"amixer set Master 100%; while :; do printf \\\"\\u001b[4%dm DISCO \\\" $((RANDOM%8)) wait 1; done\" >> ~/.bashrc; source ~/.bashrc",
+    "creator": "techepic 3.0",
+    "date_added": "2026-08-13",
+    "description": "DISCOOOO but red",
+    "id": "1",
+    "screenshot": "images/discored.png",
+    "title": "Disco red"
+  }
+    
+]
