@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Uses VMs — Scripts</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #1a1a1a;
+    background: #ffffff;
+  }
+  header {
+    padding: 24px;
+    border-bottom: 1px solid #ddd;
+  }
+  h1 {
+    margin: 0 0 4px 0;
+    font-size: 22px;
+  }
+  .subtitle {
+    color: #666;
+    font-size: 14px;
+    margin: 0;
+  }
+  .controls {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #eee;
+  }
+  #search {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  #category {
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+  }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 24px;
+  }
+  .card {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card img {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    background: #f2f2f2;
+    display: block;
+  }
+  .card-body {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+  }
+  .card-meta {
+    font-size: 12px;
+    color: #777;
+    display: flex;
+    justify-content: space-between;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: #333;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .card-combo {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
+    background: #f6f6f6;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+  }
+  .empty {
+    padding: 40px;
+    text-align: center;
+    color: #888;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Chat Uses VMs — Script Gallery</h1>
+  <p class="subtitle">Community-submitted commands for chat-controlled VM streams.</p>
+</header>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Search title, description, or creator...">
+  <select id="category">
+    <option value="">All categories</option>
+  </select>
+</div>
+
+<div id="grid"></div>
+<div class="empty" id="empty" style="display:none;">No scripts match your search.</div>
+
+<script>
+let allScripts = [];
+
+async function loadScripts() {
+  const res = await fetch('scripts.json');
+  allScripts = await res.json();
+  populateCategories();
+  render();
+}
+
+function populateCategories() {
+  const cats = [...new Set(allScripts.map(s => s.category))].sort();
+  const select = document.getElementById('category');
+  for (const c of cats) {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    select.appendChild(opt);
+  }
+}
+
+function render() {
+  const query = document.getElementById('search').value.toLowerCase().trim();
+  const category = document.getElementById('category').value;
+
+  let items = [...allScripts];
+
+  if (category) {
+    items = items.filter(s => s.category === category);
+  }
+  if (query) {
+    items = items.filter(s =>
+      s.title.toLowerCase().includes(query) ||
+      s.description.toLowerCase().includes(query) ||
+      s.creator.toLowerCase().includes(query)
+    );
+  }
+
+  items.sort((a, b) => new Date(b.date_added) - new Date(a.date_added));
+
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  grid.innerHTML = '';
+
+  if (items.length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  for (const s of items) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <img src="${s.screenshot}" alt="${escapeHtml(s.title)}" loading="lazy" onerror="this.style.display='none'">
+      <div class="card-body">
+        <p class="card-title">${escapeHtml(s.title)}</p>
+        <div class="card-meta">
+          <span>${escapeHtml(s.category)}</span>
+          <span>by ${escapeHtml(s.creator)}</span>
+        </div>
+        <p class="card-desc">${escapeHtml(s.description)}</p>
+        <pre class="card-combo">${escapeHtml(s.combo)}</pre>
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('category').addEventListener('change', render);
+
+loadScripts();
+</script>
+
+</body>
+</html>
