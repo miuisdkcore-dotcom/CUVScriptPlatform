@@ -195,7 +195,7 @@
 <script>
 let allScripts = [];
 
-const REQUIRED_FIELDS = ['id', 'title', 'category', 'creator', 'description', 'combo', 'date_added'];
+const REQUIRED_FIELDS = ['id', 'title', 'category', 'creator', 'description', 'combo_b64', 'date_added'];
 
 function showError(title, detail) {
   const banner = document.getElementById('error-banner');
@@ -259,6 +259,11 @@ async function loadScripts() {
       problems.push(`Entry ${i + 1} (${entry.title || entry.id || 'untitled'}): missing ${missing.join(', ')}`);
       return;
     }
+    const decoded = decodeBase64(entry.combo_b64);
+    if (decoded === null) {
+      problems.push(`Entry ${i + 1} (${entry.title || entry.id || 'untitled'}): combo_b64 is not valid base64`);
+      return;
+    }
     valid.push(entry);
   });
 
@@ -284,7 +289,7 @@ function formatJsonError(rawText, err) {
     const after = rawText.slice(pos, end);
     context = `\n\n...${before}[HERE >>>]${after}...`;
   }
-  return `${err.message}${context}\n\nCommon cause: an unescaped " inside a "combo" value. Every literal " inside a string must be written as \\" in JSON. Validate the file at jsonlint.com before committing.`;
+  return `${err.message}${context}\n\nTip: combo values should go in "combo_b64" as base64-encoded text (not raw "combo" with quotes/escapes). Validate the file at jsonlint.com before committing.`;
 }
 
 function populateCategories() {
@@ -339,6 +344,7 @@ function render() {
       ? `<img src="${escapeHtml(s.screenshot)}" alt="${escapeHtml(s.title)}" loading="lazy" onerror="this.outerHTML='<div class=&quot;card-thumb&quot;>No screenshot</div>'">`
       : `<div class="card-thumb">No screenshot</div>`;
 
+    const decodedCombo = decodeBase64(s.combo_b64);
     card.innerHTML = `
       ${thumb}
       <div class="card-body">
@@ -349,12 +355,12 @@ function render() {
         </div>
         <p class="card-desc">${escapeHtml(s.description)}</p>
         <div class="card-combo-row">
-          <pre class="card-combo">${escapeHtml(decodeEscapes(s.combo))}</pre>
+          <pre class="card-combo">${escapeHtml(decodedCombo)}</pre>
           <sl-copy-button copy-label="Copy script" success-label="Copied!" error-label="Couldn't copy"></sl-copy-button>
         </div>
       </div>
     `;
-    card.querySelector('sl-copy-button').value = decodeEscapes(s.combo);
+    card.querySelector('sl-copy-button').value = decodedCombo;
     grid.appendChild(card);
   }
 }
@@ -365,17 +371,21 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// Turns literal backslash-escape sequences typed in JSON strings (\u001b, \n,
-// \t, \r, \\, etc.) into their real characters, for both display and copy.
-function decodeEscapes(str) {
-  return str.replace(/\\u([0-9a-fA-F]{4})|\\n|\\r|\\t|\\\\/g, (match, hex) => {
-    if (hex) return String.fromCharCode(parseInt(hex, 16));
-    if (match === '\\n') return '\n';
-    if (match === '\\r') return '\r';
-    if (match === '\\t') return '\t';
-    if (match === '\\\\') return '\\';
-    return match;
-  });
+// Decodes a base64 string into its original UTF-8 text. Handles any bytes
+// (control characters, emoji, whatever) since it goes through the raw byte
+// array rather than assuming ASCII. Returns null (not throw) on bad input,
+// so callers can skip the entry cleanly instead of crashing the render.
+function decodeBase64(b64) {
+  try {
+    const binary = atob(b64.trim());
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch (err) {
+    return null;
+  }
 }
 
 document.getElementById('search').addEventListener('input', render);
