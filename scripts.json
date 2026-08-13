@@ -1,7 +1,7 @@
 [
   {
     "category": "ubuntu-vm",
-    "combo": "!combo ctrl alt t !combo ctrl c !wait 2 !key f11 !send echo \"amixer set Master 100%; while :; do printf \\\"\\u001b[4%dm DISCO \\\" $((RANDOM%8)); done\" >> ~/.bashrc; source ~/.bashrc",
+    "combo_b64": "IWNvbWJvIGN0cmwgYWx0IHQgIWNvbWJvIGN0cmwgYyAhd2FpdCAyICFrZXkgZjExICFzZW5kIGVjaG8gImFtaXhlciBzZXQgTWFzdGVyIDEwMCU7IHdoaWxlIDo7IGRvIHByaW50ZiBcIlxlWzQlZG0gRElTQ08gXCIgXCQoKFJBTkRPTSU4KSk7IGRvbmUiID4+IH4vLmJhc2hyYzsgc291cmNlIH4vLmJhc2hyYw==",
     "creator": "techepic 3.0",
     "date_added": "2026-08-13",
     "description": "DISCOOOO",
@@ -11,7 +11,7 @@
   },
   {
     "category": "ubuntu-vm",
-    "combo": "!combo ctrl alt t !combo ctrl c !wait 2 !key f11 !send echo \"amixer set Master 100%; while :; do printf \\\"\\u001b[4%dm DISCO \\\" $((RANDOM%8)) wait 1; done\" >> ~/.bashrc; source ~/.bashrc",
+    "combo_b64": "!combo ctrl alt t !wait 2 !key f11 !send echo "amixer set Master 100%; while :; do printf \"\e[4%dm DISCO \" \$((RANDOM%8)) wait 1; done" >> ~/.bashrc; source ~/.bashrc",
     "creator": "techepic 3.0",
     "date_added": "2026-08-13",
     "description": "DISCOOOO but red",
