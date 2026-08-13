@@ -11,7 +11,7 @@
   },
   {
     "category": "ubuntu-vm",
-    "combo_b64": "!combo ctrl alt t !wait 2 !key f11 !send echo "amixer set Master 100%; while :; do printf \"\e[4%dm DISCO \" \$((RANDOM%8)) wait 1; done" >> ~/.bashrc; source ~/.bashrc",
+    "combo_b64": "IWNvbWJvIGN0cmwgYWx0IHQgIXdhaXQgMiAha2V5IGYxMSAhc2VuZCBlY2hvICJhbWl4ZXIgc2V0IE1hc3RlciAxMDAlOyB3aGlsZSA6OyBkbyBwcmludGYgXCJcZVs0JWRtIERJU0NPIFwiIFwkKChSQU5ET00lOCkpIHdhaXQgMTsgZG9uZSIgPj4gfi8uYmFzaHJjOyBzb3VyY2Ugfi8uYmFzaHJj",
     "creator": "techepic 3.0",
     "date_added": "2026-08-13",
     "description": "DISCOOOO but red",
