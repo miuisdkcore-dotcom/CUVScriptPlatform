@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chat Uses VMs — Script Gallery</title>
+<script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -102,16 +103,27 @@
     margin: 0;
     line-height: 1.4;
   }
-  .card-combo {
-    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-    font-size: 11px;
+  .card-combo-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
     background: #f6f6f6;
     border: 1px solid #eee;
     border-radius: 4px;
     padding: 8px;
+  }
+  .card-combo {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 11px;
     white-space: pre-wrap;
     word-break: break-word;
     margin: 0;
+    flex: 1;
+  }
+  sl-copy-button {
+    flex-shrink: 0;
+    --success-color: #1a7f37;
+    --error-color: #cf222e;
   }
   .empty {
     padding: 40px;
@@ -336,9 +348,13 @@ function render() {
           <span>by ${escapeHtml(s.creator)}</span>
         </div>
         <p class="card-desc">${escapeHtml(s.description)}</p>
-        <pre class="card-combo">${escapeHtml(s.combo)}</pre>
+        <div class="card-combo-row">
+          <pre class="card-combo">${escapeHtml(decodeEscapes(s.combo))}</pre>
+          <sl-copy-button copy-label="Copy script" success-label="Copied!" error-label="Couldn't copy"></sl-copy-button>
+        </div>
       </div>
     `;
+    card.querySelector('sl-copy-button').value = decodeEscapes(s.combo);
     grid.appendChild(card);
   }
 }
@@ -347,6 +363,19 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// Turns literal backslash-escape sequences typed in JSON strings (\u001b, \n,
+// \t, \r, \\, etc.) into their real characters, for both display and copy.
+function decodeEscapes(str) {
+  return str.replace(/\\u([0-9a-fA-F]{4})|\\n|\\r|\\t|\\\\/g, (match, hex) => {
+    if (hex) return String.fromCharCode(parseInt(hex, 16));
+    if (match === '\\n') return '\n';
+    if (match === '\\r') return '\r';
+    if (match === '\\t') return '\t';
+    if (match === '\\\\') return '\\';
+    return match;
+  });
 }
 
 document.getElementById('search').addEventListener('input', render);
